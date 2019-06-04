@@ -4,6 +4,7 @@ output: html_notebook
 ---
 
 ```{r warning=FALSE}
+
 library(tidyverse)
 library(tidytext)
 library(here)
@@ -12,7 +13,7 @@ theme_set(theme_bw())
 ```
 
 ```{r carrega}
-reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20181113.csv"))
+reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20190515.csv"))
 
 #reclamacoes = reclamacoes_raw %>% 
 #    mutate(
@@ -39,14 +40,24 @@ glimpse(op30)
 Precisamos de um dataframe onde cada observacao eh uma palavra. 
 
 ```{r separa}
+convertOp30 = function(op30Value) {
+  return ((((op30Value + 8)/30.0) * -4) + 5)
+}
+
 palavra_a_palavra = reclamacoes %>% 
-    select(id, reclamacao) %>% 
-    unnest_tokens(termo, reclamacao)
+    select(id, texto) %>% 
+    unnest_tokens(termo, texto)
 
 palavra_a_palavra %>%
   select(id, termo) %>%
   head(20)
 
+maximo_op30 = max(sentimentos %>%  select(sentimento_op30))
+minimo_op30 = min(sentimentos %>%  select(sentimento_op30))
+convet_op30toaval = sentimentos %>% group_by(id) %>% summarise(conversao = convertOp30(sentimento_op30))
+  
+summary(convet_op30(), select())
+  
 palavras_com_sentimento = palavra_a_palavra %>% 
   left_join(op30 %>% select(term, op30 = polarity), by = c("termo" = "term")) %>% 
   left_join(sent %>% select(term, sent = polarity), by = c("termo" = "term")) 
@@ -64,6 +75,6 @@ sentimentos = palavras_com_sentimento %>%
               palavras = n())
 
 sentimentos %>% 
-    write_csv(here("data/5-sentimentos/sentimento.csv"))
+    write_csv(here("data/5-sentimentos/sentimento2019.csv"))
 ```
 

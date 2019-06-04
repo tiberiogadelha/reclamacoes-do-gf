@@ -32,3 +32,5 @@ O código é em R. Abra `reclamacoes-gf.Rproj` e rode no terminal do RStudio:
 deps = c("tidyverse", "rvest", "stringr", "here")
 install.packages(deps)
 ```
+sentimentos %>% group_by(id) %>%  select(sentimento_op30) %>% summarise(aval = (-4 * ((sentimento_op30 + 8)/30)) + 5)                                                                                                                      
+

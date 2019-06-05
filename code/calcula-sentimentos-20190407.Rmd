@@ -1,9 +1,12 @@
 ---
-title: "Analisa sentimentos das reclamacoes"
-output: html_notebook
+title: "Analisa sentimentos das reclamações"
+output:
+  html_notebook: default
+  pdf_document: default
 ---
 
 ```{r warning=FALSE}
+
 library(tidyverse)
 library(tidytext)
 library(here)
@@ -12,7 +15,7 @@ theme_set(theme_bw())
 ```
 
 ```{r carrega}
-reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20181113.csv"))
+reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20190515.csv"))
 
 #reclamacoes = reclamacoes_raw %>% 
 #    mutate(
@@ -40,13 +43,13 @@ Precisamos de um dataframe onde cada observacao eh uma palavra.
 
 ```{r separa}
 palavra_a_palavra = reclamacoes %>% 
-    select(id, reclamacao) %>% 
-    unnest_tokens(termo, reclamacao)
+    select(id, texto) %>% 
+    unnest_tokens(termo, texto)
 
 palavra_a_palavra %>%
   select(id, termo) %>%
   head(20)
-
+  
 palavras_com_sentimento = palavra_a_palavra %>% 
   left_join(op30 %>% select(term, op30 = polarity), by = c("termo" = "term")) %>% 
   left_join(sent %>% select(term, sent = polarity), by = c("termo" = "term")) 
@@ -64,6 +67,34 @@ sentimentos = palavras_com_sentimento %>%
               palavras = n())
 
 sentimentos %>% 
-    write_csv(here("data/5-sentimentos/sentimento.csv"))
+    write_csv(here("data/5-sentimentos/sentimento2019.csv"))
 ```
+
+Para converter os valores do op30 e sent no intervalo de nota utilizado (entre 1 e 5), foi necessário fazer uma escala de conversão.
+
+```{r convert}
+maximo_op30 = max(sentimentos %>%  select(sentimento_op30))
+minimo_op30 = min(sentimentos %>%  select(sentimento_op30))
+maximo_sent = max(sentimentos %>% select(sentimento_sent))
+minimo_sent = min(sentimentos %>% select(sentimento_sent))
+
+convertOp30 = function(op30Value) {
+  return ((((op30Value - minimo_op30)/(maximo_op30 - minimo_op30)) * -4) + 5)
+}
+
+convertSent = function(sentValue) {
+  return ((((sentValue - minimo_sent)/(maximo_sent - minimo_sent)) * -4) + 5)
+}
+
+convet_op30_to_avaliacao = sentimentos %>% 
+  group_by(id) %>% 
+  summarise(conversao = convertOp30(sentimento_op30))
+
+convet_sent_to_avaliacao = sentimentos %>% 
+  group_by(id) %>% 
+  summarise(conversao = convertSent(sentimento_sent))
+
+```
+
+
 

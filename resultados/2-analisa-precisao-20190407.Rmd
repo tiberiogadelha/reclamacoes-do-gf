@@ -68,7 +68,7 @@ reclamacoes_polarizada = reclamacoes_l %>%
 
 ```
 
-Calcula o erro (SSE) por reclamação. (Erro quadático) 
+Calcula o erro (SSE) por reclamação. (Erro quadático).
 
 ```{r}
 reclamacoes_polarizada = reclamacoes_polarizada %>% 

@@ -16,17 +16,22 @@ theme_set(theme_bw())
 
 ```{r carrega}
 
-reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20180703.csv"))
+reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20190515.csv"))
+
 sentimentos = read_csv(here("data/5-sentimentos/sentimento2019.csv"))
 
-reclamacoes = reclamacoes %>% mutate(comprimento_reclamacao = str_length(reclamacao))
+reclamacoes = reclamacoes %>% mutate(comprimento_reclamacao = str_length(texto))
 ```
 
 `reclamacoes_l` tem um formato long em vez de wide (explicado [aqui](https://sejdemyr.github.io/r-tutorials/basics/wide-and-long/)).
 
 ```{r junta}
+reclamacoes = reclamacoes %>%
+            select(id, orgao, data, titulo, texto, grupo_avaliando = 'Grupo que vai avaliar', insatisfacao, avaliadores, range.avaliacoes)
+
 reclamacoes = reclamacoes %>% 
     left_join(sentimentos, by = "id")
+
 
 reclamacoes_l = reclamacoes %>%  
     select(-palavras_op30, -palavras_sent, -grupo_avaliando) %>% 
@@ -54,20 +59,19 @@ normaliza = function(lexico, polaridade) {
     }
 }
 # Faça você mesmo. Crie a variável polaridade_normalizada
-reclamacoes_l = reclamacoes_l %>% 
-     group_by(lexico) %>% 
-     mutate(polaridade_normalizada = normaliza(lexico, polaridade))
 
 reclamacoes_polarizada = reclamacoes_l %>% 
-     group_by(lexico) %>% 
      mutate(polaridade_normalizada = normaliza(lexico, polaridade))
+
+
+
 
 ```
 
 Calcula o erro (SSE) por reclamação
 
 ```{r}
-reclamacoes_l = reclamacoes_l %>% 
+reclamacoes_polarizada = reclamacoes_polarizada %>% 
     mutate(erro = (insatisfacao - polaridade_normalizada)**2)
 ```
 
@@ -87,7 +91,7 @@ reclamacoes %>%
 ```
 
 ```{r}
-reclamacoes_l %>% 
+reclamacoes_polarizada %>% 
     ggplot(aes(x = insatisfacao, y = polaridade_normalizada, group = insatisfacao)) + 
     geom_abline(slope = 1, intercept = 0, color = "grey") + 
     geom_jitter(alpha = .7)  + 

@@ -88,7 +88,8 @@ convertSent = function(sentValue) {
 
 convet_op30_to_avaliacao = sentimentos %>% 
   group_by(id) %>% 
-  summarise(conversao = convertOp30(sentimento_op30))
+  summarise(conversao_op30 = convertOp30(sentimento_op30), conversao_sent = convertSent(sentimento_sent))
+
 
 convet_sent_to_avaliacao = sentimentos %>% 
   group_by(id) %>% 

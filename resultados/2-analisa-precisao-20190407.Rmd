@@ -16,17 +16,22 @@ theme_set(theme_bw())
 
 ```{r carrega}
 
-reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20180703.csv"))
-sentimentos = read_csv(here("data/5-sentimentos/sentimento.csv"))
+reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20190515.csv"))
 
-reclamacoes = reclamacoes %>% mutate(comprimento_reclamacao = str_length(reclamacao))
+sentimentos = read_csv(here("data/5-sentimentos/sentimento2019.csv"))
+
+reclamacoes = reclamacoes %>% mutate(comprimento_reclamacao = str_length(texto))
 ```
 
 `reclamacoes_l` tem um formato long em vez de wide (explicado [aqui](https://sejdemyr.github.io/r-tutorials/basics/wide-and-long/)).
 
 ```{r junta}
+reclamacoes = reclamacoes %>%
+            select(id, orgao, data, titulo, texto, grupo_avaliando = 'Grupo que vai avaliar', insatisfacao, avaliadores, range.avaliacoes)
+
 reclamacoes = reclamacoes %>% 
     left_join(sentimentos, by = "id")
+
 
 reclamacoes_l = reclamacoes %>%  
     select(-palavras_op30, -palavras_sent, -grupo_avaliando) %>% 
@@ -41,17 +46,33 @@ reclamacoes_l %>% View()
 Converte polaridades para escala 0-5
 
 ```{r}
+maximo_op30 = max(sentimentos %>%  select(sentimento_op30))
+minimo_op30 = min(sentimentos %>%  select(sentimento_op30))
+maximo_sent = max(sentimentos %>%   select(sentimento_sent))
+minimo_sent = min(sentimentos %>%   select(sentimento_sent))
+
+normaliza = function(lexico, polaridade) {
+    if(lexico == "sentimento_op30"){
+        return ((((polaridade - minimo_op30)/(maximo_op30 - minimo_op30)) * -4) + 5)
+    } else {
+        return ((((polaridade - minimo_sent)/(maximo_sent - minimo_sent)) * -4) + 5)
+    }
+}
 # Faça você mesmo. Crie a variável polaridade_normalizada
-# reclamacoes_l = reclamacoes_l %>% 
-#     group_by(lexico) %>% 
-#     mutate(polaridade_normalizada = ALGOAQUI)
+
+reclamacoes_polarizada = reclamacoes_l %>% 
+     mutate(polaridade_normalizada = normaliza(lexico, polaridade))
+
+
+
+
 ```
 
-Calcula o erro (SSE) por reclamação
+Calcula o erro (SSE) por reclamação. (Erro quadático).
 
 ```{r}
-reclamacoes_l = reclamacoes_l %>% 
-    mutate(erro = (insatisfacao - polaridade_normalizada)**2)
+reclamacoes_polarizada = reclamacoes_polarizada %>% 
+    mutate(erro = (insatisfacao - polaridade_normalizada) ** 2 )
 ```
 
 
@@ -70,7 +91,7 @@ reclamacoes %>%
 ```
 
 ```{r}
-reclamacoes_l %>% 
+reclamacoes_polarizada %>% 
     ggplot(aes(x = insatisfacao, y = polaridade_normalizada, group = insatisfacao)) + 
     geom_abline(slope = 1, intercept = 0, color = "grey") + 
     geom_jitter(alpha = .7)  + 

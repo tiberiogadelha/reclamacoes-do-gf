@@ -18,17 +18,19 @@ theme_set(theme_bw())
 
 reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20190515.csv"))
 
+reclamacoes = reclamacoes %>%
+            select(id, orgao, data, titulo, texto, grupo_avaliando = 'Grupo que vai avaliar', insatisfacao, avaliadores, range.avaliacoes)
+
+
 sentimentos = read_csv(here("data/5-sentimentos/sentimento2019.csv"))
 
+reclamacoes <- reclamacoes %>% mutate(comprimento_titulo = str_length(titulo))
 reclamacoes = reclamacoes %>% mutate(comprimento_reclamacao = str_length(texto))
 ```
 
 `reclamacoes_l` tem um formato long em vez de wide (explicado [aqui](https://sejdemyr.github.io/r-tutorials/basics/wide-and-long/)).
 
 ```{r junta}
-reclamacoes = reclamacoes %>%
-            select(id, orgao, data, titulo, texto, grupo_avaliando = 'Grupo que vai avaliar', insatisfacao, avaliadores, range.avaliacoes)
-
 reclamacoes = reclamacoes %>% 
     left_join(sentimentos, by = "id")
 
@@ -43,14 +45,8 @@ reclamacoes_l %>% View()
 
 ```
 
-Converte polaridades para escala 0-5
-
+Funções usada durante o projeto
 ```{r}
-maximo_op30 = max(sentimentos %>%  select(sentimento_op30))
-minimo_op30 = min(sentimentos %>%  select(sentimento_op30))
-maximo_sent = max(sentimentos %>%   select(sentimento_sent))
-minimo_sent = min(sentimentos %>%   select(sentimento_sent))
-
 normaliza = function(lexico, polaridade) {
     if(lexico == "sentimento_op30"){
         return ((((polaridade - minimo_op30)/(maximo_op30 - minimo_op30)) * -4) + 5)
@@ -58,13 +54,20 @@ normaliza = function(lexico, polaridade) {
         return ((((polaridade - minimo_sent)/(maximo_sent - minimo_sent)) * -4) + 5)
     }
 }
+```
+
+Converte polaridades para escala 1-5
+
+```{r}
+maximo_op30 = max(sentimentos %>%  select(sentimento_op30))
+minimo_op30 = min(sentimentos %>%  select(sentimento_op30))
+maximo_sent = max(sentimentos %>%   select(sentimento_sent))
+minimo_sent = min(sentimentos %>%   select(sentimento_sent))
+
 # Faça você mesmo. Crie a variável polaridade_normalizada
 
 reclamacoes_polarizada = reclamacoes_l %>% 
      mutate(polaridade_normalizada = normaliza(lexico, polaridade))
-
-
-
 
 ```
 
@@ -80,14 +83,41 @@ reclamacoes_polarizada = reclamacoes_polarizada %>%
 
 Inicial. Faça os gráficos a mais que achar necessário para entender os dados que temos de resultado. Lembrando de nossa questão: Quão eficazes são os métodos de análise de sentimento baseados em léxicos para estimar o nível de insatisfação de reclamações recebidas pelo reclameaqui do governo federal? Existe um exemplo de EDA no repositório. Uma decisão importante a ser usada é se vamos considerar as avaliações humanas onde houve muita discordância sobre o nível de insatisfação.
 
+### Questionamentos:
+1) Há diferença no tamanho da reclamação por cada órgão?
+```{r}
+reclamacoes_polarizada %>% 
+  filter(complete.cases(.)) %>% 
+  ggplot(aes(fill = orgao, x = comprimento_reclamacao), na.rm = TRUE) + 
+  geom_histogram(binwidth = 50, na.rm = TRUE) + 
+  facet_grid(orgao ~ .)
+
+reclamacoes_polarizada %>% group_by(orgao) %>% 
+  ggplot(aes(x = reorder(orgao, comprimento_reclamacao), y=comprimento_reclamacao)) + geom_boxplot()
+
+```
+Observando os gráficos gerados é possível ver que  há uma pequena diferença dos tamanhos das reclamações por órgão. A ANATEL, em média, tem as reclamações com maior descrição.
+
+2) Os tamanhos das reclamações ou títulos têm alguma relação com o nível de insatisfação de acordo com o tipo de avaliação (Humana, sent, op30)?
+```{r}
+reclamacoes %>% ggplot(aes(x = insatisfacao, y = comprimento_reclamacao)) + geom_point()
+reclamacoes %>% ggplot(aes(x = insatisfacao, y= comprimento_titulo)) + geom_point()
+
+polarizada_by_lexico = reclamacoes_polarizada %>% group_by(id) %>% select(id, polaridade_normalizada, comprimento_reclamacao) 
+reclamacoes_polarizada %>%  ggplot(aes(x = polaridade_normalizada, y = comprimento_reclamacao)) + geom_point()
+reclamacoes_polarizada %>% ggplot(aes(x = polaridade_normalizada, y= comprimento_titulo)) + geom_point()
+```
+Analisando os gráficos, é possível analisar que 
+
 ###Como avaliar a eficácia dos métodos?  
 Uma medida interessante da eficiência desses métodos é calcular a soma dos erros ao quadrado (SSE) considerando o que o método definiu como a polaridade_normalizada e o que a avaliação humana definiu como a insatisfação.
 
 ```{r}
 reclamacoes %>% 
     ggplot(aes(x = sentimento_op30, y = sentimento_sent)) + 
-    geom_abline(slope = 1, intercept = 0, color = "grey") + 
+    geom_abline(slope = 1, intercept = 0, color = "blue") + 
     geom_count(alpha = .7) 
+
 ```
 
 ```{r}
@@ -97,7 +127,7 @@ reclamacoes_polarizada %>%
     geom_jitter(alpha = .7)  + 
     facet_wrap(~ lexico)
 
-reclamacoes_l %>% 
+reclamacoes_polarizada %>% 
     ggplot(aes(x = insatisfacao, y = erro, group = insatisfacao)) + 
     geom_jitter(alpha = .5)  +
     # geom_boxplot() + 
@@ -111,10 +141,10 @@ Agora um modelo para responder sua pergunta.
 
 ```{r}
 #Cria variável dummy para preditor categórico
-reclamacoes_l = reclamacoes_l %>% mutate(lexico.dummy = if_else(lexico == "sentimento_sent", 1, 0))
+reclamacoes_polarizada = reclamacoes_polarizada %>% mutate(lexico.dummy = if_else(lexico == "sentimento_sent", 1, 0))
 #Você precisa entender o que fez acima para interpretar sua regressão
 #Você pode também criar uma variável dummy para o órgao (se anac ou inss)
-
+reclamacoes_polarizada = reclamacoes_polarizada %>% mutate(orgao.dummy = if_else(orgao == "ANS", 1, 0))
 # ggpairs(reclamacoes_l %>% select(<selecione as colulas que vc quer usar aqui>))
 # lm1 = lm(<seu modelo>)
 ```

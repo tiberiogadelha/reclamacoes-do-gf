@@ -41,7 +41,6 @@ reclamacoes_l = reclamacoes %>%
            value = "polaridade", 
            sentimento_op30, sentimento_sent)
 
-reclamacoes_l %>% View()
 
 ```
 
@@ -103,11 +102,24 @@ Observando os gráficos gerados é possível ver que  há uma pequena diferença
 reclamacoes %>% ggplot(aes(x = insatisfacao, y = comprimento_reclamacao)) + geom_point()
 reclamacoes %>% ggplot(aes(x = insatisfacao, y= comprimento_titulo)) + geom_point()
 
-polarizada_by_lexico = reclamacoes_polarizada %>% group_by(id) %>% select(id, polaridade_normalizada, comprimento_reclamacao) 
-reclamacoes_polarizada %>%  ggplot(aes(x = polaridade_normalizada, y = comprimento_reclamacao)) + geom_point()
-reclamacoes_polarizada %>% ggplot(aes(x = polaridade_normalizada, y= comprimento_titulo)) + geom_point()
+normalizado_sent = reclamacoes %>%  
+    select(id, sentimento_sent, comprimento_reclamacao, comprimento_titulo) %>% 
+    mutate(normalizada_sent = normaliza("sentimento_sent", sentimento_sent))
+
+normalizado_op30 = reclamacoes %>%  
+    select(id, sentimento_op30, comprimento_reclamacao, comprimento_titulo) %>% 
+    mutate(normalizada_op30 = normaliza("sentimento_op30", sentimento_op30))
+
+
+## Gráfico que apresenta Avaliação gerada pelo sentimento normalizado(op30 ou sent) x Comprimento da descrição da reclamação
+normalizado_sent %>%  ggplot(aes(x = normalizada_sent, y = comprimento_reclamacao)) + geom_point()
+normalizado_op30 %>% ggplot(aes(x = normalizada_op30, y= comprimento_titulo)) + geom_point()
+
+## Gráfico que apresenta Avaliação gerada pelo sentimento normalizado(op30 ou sent) x Comprimento do título
+normalizado_sent %>%  ggplot(aes(x = normalizada_sent, y = comprimento_titulo)) + geom_point()
+normalizado_op30 %>% ggplot(aes(x = normalizada_op30, y= comprimento_titulo)) + geom_point()
 ```
-Analisando os gráficos, é possível analisar que 
+Analisando os gráficos, é possível analisar que não há uma relação muito grande entre o tamanho do texto e a insatisfação. Já que as maiores descrições estão entre 2 e 3,5. 
 
 ###Como avaliar a eficácia dos métodos?  
 Uma medida interessante da eficiência desses métodos é calcular a soma dos erros ao quadrado (SSE) considerando o que o método definiu como a polaridade_normalizada e o que a avaliação humana definiu como a insatisfação.

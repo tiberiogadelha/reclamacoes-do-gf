@@ -92,7 +92,15 @@ reclamacoes_polarizada %>%
   facet_grid(orgao ~ .)
 
 reclamacoes_polarizada %>% group_by(orgao) %>% 
-  ggplot(aes(x = reorder(orgao, comprimento_reclamacao), y=comprimento_reclamacao)) + geom_boxplot()
+  ggplot(aes(x = reorder(orgao, comprimento_reclamacao), y=comprimento_reclamacao)) + geom_boxplot(aes(fill=orgao))
+  
+reclamacoes_anatel <- reclamacoes_polarizada %>% filter(orgao=="ANATEL")
+reclamacoes_ans <- reclamacoes_polarizada %>% filter(orgao=="ANS")
+
+mean(reclamacoes_anatel$comprimento_reclamacao)
+mean(reclamacoes_ans$comprimento_reclamacao)
+
+wilcox.test(reclamacoes_anatel$comprimento_reclamacao, reclamacoes_ans$comprimento_reclamacao, paired = TRUE)
 
 ```
 Observando os gráficos gerados é possível ver que  há uma pequena diferença dos tamanhos das reclamações por órgão. A ANATEL, em média, tem as reclamações com maior descrição.

@@ -166,7 +166,7 @@ normalizado_op30 %>% ggplot(aes(x = normalizada_op30, y= comprimento_titulo)) + 
 ```
 Analisando os gráficos, é possível analisar que não há uma relação muito grande entre o tamanho do texto e a insatisfação. Já que as maiores descrições estão entre 2 e 3,5. 
 
-3) Quais os dias na semana tiveram mais reclamações? o nível de insatisfação foi maior durante os finais de semana ?
+3) Quais os dias na semana tiveram mais reclamações?
 
 ```{r}
 renomeiaDias = function (data) {
@@ -194,10 +194,33 @@ numeroDias %>% ggplot(aes(x=dia, y=num)) + geom_bar(stat="identity")
 ```
 Aqui podemos observar a frequência de reclamações ao longo do dia, podemos ver que o dia com mais reclamações é a segunda feira, agora vamos analisar em qual dia da semana temos as reclamações com maior nível de insatisfação fazendo a médias das reclamações diárias
 
+4)  o nível de insatisfação foi maior durante os finais de semana ?
 ```{r}
 # Usando o nível de insatisfacao por avaliação humana
 mediaPorDia %>% ggplot(aes(x=dia, y=media)) + geom_bar(stat="identity")
+
+# Analisando variabilidade
+dias %>% ggplot(aes(x=dia, y=insatisfacao)) +
+  geom_boxplot(aes(fill=dia)) +
+  scale_x_discrete(labels= c("Domingo", "Quarta", "Quinta", "Sábado", "Segunda", "Sexta", "Terça"))
 ```
+
+```{r} 
+# Mediana por dia
+medianaPorDia = dias %>% group_by(dia) %>% summarise(mediana = median(insatisfacao))
+medianaPorDiaOp30 = diasOp30 %>% group_by(dia) %>% summarise(mediana = median(normalizada_op30))
+medianaPorDiaSent = diasSent %>% group_by(dia) %>% summarise(mediana = median(normalizada_sent))
+
+medianaPorDia
+medianaPorDiaOp30
+medianaPorDiaSent
+
+par(mfrow = c(2,2))
+medianaPorDia %>% ggplot(aes(x=dia, y=mediana)) + geom_bar(stat="identity")
+medianaPorDiaOp30 %>% ggplot(aes(x=dia, y=mediana)) + geom_bar(stat="identity")
+medianaPorDiaSent %>% ggplot(aes(x=dia, y=mediana)) + geom_bar(stat="identity")
+```
+
 ```{r}
 # Usando o nível de insatisfacao por avaliação do op30
 mediaPorDiaOp30 %>% ggplot(aes(x=dia, y=media)) + geom_bar(stat="identity")

@@ -124,6 +124,30 @@ normalizado_op30 = reclamacoes %>%
     mutate(normalizada_op30 = normaliza("sentimento_op30", sentimento_op30))
 ```
 
+# Analise de correlação entre os comprimentos dos títulos das reclamações e os níveis de insatisfação dependendo do método de avaliação
+```{r}
+par(mfrow = c(2,2))
+plot(reclamacoes_polarizada$comprimento_titulo ~ reclamacoes_polarizada$insatisfacao)
+plot(normalizado_sent$comprimento_titulo ~ normalizado_sent$normalizada_sent)
+plot(normalizado_op30$comprimento_titulo ~ normalizado_op30$normalizada_op30)
+
+cor.test(reclamacoes_polarizada$comprimento_titulo, reclamacoes_polarizada$insatisfacao, method='spearman')
+cor.test(normalizado_sent$comprimento_titulo, normalizado_sent$normalizada_sent, method='spearman')
+cor.test(normalizado_op30$comprimento_titulo, normalizado_op30$normalizada_op30, method='spearman')
+```
+
+# Analise de correlação entre os comprimentos das reclamações e os níveis de insatisfação dependendo do método de avaliação
+```{r}
+par(mfrow = c(2,2))
+plot(reclamacoes_polarizada$comprimento_reclamacao ~ reclamacoes_polarizada$insatisfacao)
+plot(normalizado_sent$comprimento_reclamacao ~ normalizado_sent$normalizada_sent)
+plot(normalizado_op30$comprimento_reclamacao ~ normalizado_op30$normalizada_op30)
+
+cor.test(reclamacoes_polarizada$comprimento_reclamacao, reclamacoes_polarizada$insatisfacao, method='spearman')
+cor.test(normalizado_sent$comprimento_reclamacao, normalizado_sent$normalizada_sent, method='spearman')
+cor.test(normalizado_op30$comprimento_reclamacao, normalizado_op30$normalizada_op30, method='spearman')
+```
+
 ```{r}
 ## Gráficos que apresentam Avaliação gerada pelo sentimento normalizado(op30 ou sent) x Comprimento da descrição da reclamação
 normalizado_sent %>%  ggplot(aes(x = normalizada_sent, y = comprimento_reclamacao)) + geom_point()

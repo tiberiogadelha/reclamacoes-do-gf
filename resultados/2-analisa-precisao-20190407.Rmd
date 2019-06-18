@@ -75,6 +75,18 @@ Calcula o erro (SSE) por reclamação. (Erro quadático).
 ```{r}
 reclamacoes_polarizada = reclamacoes_polarizada %>% 
     mutate(erro = (insatisfacao - polaridade_normalizada) ** 2 )
+
+tabela_op30 = reclamacoes_polarizada %>% filter(lexico.dummy == 0) 
+media_erro_op30 = mean(tabela_op30$erro)
+mediana_erro_op30 = median(tabela_op30$erro)
+desvio_padrao_erro_op30 = sd(tabela_op30$erro)
+
+tabela_sent =  reclamacoes_polarizada %>% filter(lexico.dummy == 1)
+media_erro_sent = mean(tabela_sent$erro)
+mediana_erro_sent = median(tabela_sent$erro)
+desvio_padrao_erro_sent = sd(tabela_sent$erro)
+
+wilcox.test(tabela_op30$erro, tabela_sent$erro, paired = TRUE)
 ```
 
 
@@ -254,7 +266,7 @@ reclamacoes_polarizada %>%
 reclamacoes_polarizada %>% 
     ggplot(aes(x = insatisfacao, y = erro, group = insatisfacao)) + 
     geom_jitter(alpha = .5)  +
-    # geom_boxplot() + 
+    #geom_boxplot() + 
     facet_wrap(~ lexico)
 ```
 

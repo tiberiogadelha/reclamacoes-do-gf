@@ -296,8 +296,25 @@ summary(lm_insatisfacao_lexico)
 lm_insatisfacao = lm(insatisfacao ~ comprimento_reclamacao + erro + polaridade, data=reclamacoes_polarizada)
 summary(lm_insatisfacao)
 
-
 confint(lm_insatisfacao)
+
+# Modelos para predizer a polaridade normalizada 
+lm_polaridade_normalizada = lm(polaridade_normalizada ~ comprimento_reclamacao + polaridade, data=reclamacoes_polarizada)
+summary(lm_polaridade_normalizada)
+
+reclamacoes_polarizada_sent = reclamacoes_polarizada %>% 
+  filter(lexico == "sentimento_sent")
+
+reclamacoes_polarizada_op30 = reclamacoes_polarizada %>% 
+  filter(lexico == "sentimento_op30")
+
+lm_polaridade_normalizada_sent = lm(polaridade_normalizada ~ comprimento_reclamacao + polaridade, data=reclamacoes_polarizada_sent)
+summary(lm_polaridade_normalizada_sent)
+
+lm_polaridade_normalizada_op30 = lm(polaridade_normalizada ~ comprimento_reclamacao + polaridade, data=reclamacoes_polarizada_op30)
+summary(lm_polaridade_normalizada_op30)
+
+confint(lm_polaridade_normalizada, level=.95)
 ```
 
 **Dica** - o texto de resultado que queremos produzir é algo como: 

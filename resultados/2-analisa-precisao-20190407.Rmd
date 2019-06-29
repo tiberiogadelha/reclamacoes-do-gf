@@ -92,7 +92,7 @@ reclamacoes_polarizada %>%
   facet_grid(orgao ~ .)
 
 reclamacoes_polarizada %>% group_by(orgao) %>% 
-  ggplot(aes(x = reorder(orgao, comprimento_reclamacao), y=comprimento_reclamacao)) + geom_boxplot(aes(fill=orgao))
+  ggplot(aes(x = reorder(orgao, comprimento_reclamacao), y=comprimento_reclamacao)) + geom_boxplot(aes(fill=orgao)) + scale_fill_manual(values=c("#424141", "#d1d1d1")) + labs(x="Ordem", y = "Comprimento da Reclamação")
   
 reclamacoes_anatel <- reclamacoes_polarizada %>% filter(orgao=="ANATEL")
 reclamacoes_ans <- reclamacoes_polarizada %>% filter(orgao=="ANS")
@@ -202,7 +202,7 @@ mediaPorDia %>% ggplot(aes(x=dia, y=media)) + geom_bar(stat="identity")
 # Analisando variabilidade
 dias %>% ggplot(aes(x=dia, y=insatisfacao)) +
   geom_boxplot(aes(fill=dia)) +
-  scale_x_discrete(labels= c("Domingo", "Quarta", "Quinta", "Sábado", "Segunda", "Sexta", "Terça"))
+  scale_x_discrete(labels= c("Domingo", "Quarta", "Quinta", "Sábado", "Segunda", "Sexta", "Terça"))  + scale_fill_manual(values=c("#000000","#292929","#3b3b3b","#616161","#737373","#B0B5B3","#DCDCDC")) + labs(x="Dia", y = "Insatisfação")
 ```
 
 ```{r} 
